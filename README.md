@@ -1,17 +1,16 @@
 # Sunlight Meter
-
 Using the Adafruit TSL2591 Digital Light Sensor and a Raspberry Pi to monitor daily sunlight conditions.  
 
 ## About
 The [TSL2591](https://www.adafruit.com/product/1980) is a high dynamic range digital light sensor.  
 It can detect infrared, full-spectrum and human-visible light, then transmit that data over a serial connection.   
 
-By collecting this data, we are able to:  
-- Calculate the lux value for the current light conditions.
-- Report real-time data for monitoring or automation.
-- Save historical data to give insight on changes over time.
-- Provide a dashboard to control the sensor and visualize data.
-- Most importantly, determine if your location is: ☁️ shade, partial shade, partial sun, or full sun ☀️
+Features:  
+- Monitors the current light conditions.
+- Reports real-time data for monitoring or automation.
+- Saves historical data to give insight on changes over time.
+- Provides a dashboard to control the sensor and visualize data.
+- Determines if your location is: ☁️ shade, partial shade, partial sun, or full sun ☀️
 
 ## How it works
 ### Configuration: 
@@ -22,11 +21,11 @@ Connecting the sensor to the Pi:
 - SDA to SDA
 - SCL to SCL
 
-"Sunlight Meter" automatically adjusts sensor gain and integration time.  
+Sunlight Meter automatically adjusts sensor gain and integration time.  
 This helps ensure accurate readings and avoid saturation in high light conditions.  
 
 ### API:
-"Sunlight Meter" runs an API that allows remote access to the sensor data and jobs.  
+Sunlight Meter runs an API that allows remote access to the sensor data and jobs.  
 Connect remotely to:
 - Start/Stop any recording job.
 - Receive real-time readings and light conditions. 
@@ -34,7 +33,7 @@ Connect remotely to:
 - Check device wifi-signal strength.
 
 ### Dashboard:
-The "Sunlight Dashboard" is a web app that displays the current light conditions and historical data.  
+The dashboard is a web app that displays the current light conditions and historical data.  
 - Visualize historical light conditions
 - Control the sensor
 - Export the results
