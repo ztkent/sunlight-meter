@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunlight Meter</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.6.1"></script>
+    <script src="https://go-echarts.github.io/go-echarts-assets/assets/echarts.min.js"></script>
+    <script src="https://go-echarts.github.io/go-echarts-assets/assets/themes/chalk.js"></script>
+</head>
+
+<body class="bg-gray-800">
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="bg-gray-900 p-6 rounded shadow-md text-center">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <h3 class="text-2xl font-bold text-white text-left pb-2">Sunlight Meter</h3>
+                    <div id="htmxContent" hx-get="/sunlightmeter/status" hx-trigger="load, every 15s">
+                        <div class="text-white text-sm rounded-full px-2 bg-green-500 ml-4 mb-1">
+                            Connected
+                        </div>
+                        <div class="text-white text-sm rounded-full px-2 bg-red-500 ml-4 mb-1">
+                            Disabled
+                        </div>
+                    </div>
+                </div>
+                <button type="button" hx-post="/sunlightmeter/graph" hx-target="#graphContent" hx-include="#graphForm" onclick="setDateInputs()" class="text-white text-2xl">
+                    ⟳
+                </button>
+            </div>
+            <form id="graphForm" hx-post="/sunlightmeter/graph" hx-target="#graphContent"> 
+                <div style="display: grid; grid-template-columns: auto 300px; gap: 0rem;">
+                    <div id="graphContent" hx-post="/sunlightmeter/graph" hx-trigger="load" class="h-full"></div>
+                    <div class="ml-2 bg-gray-200 p-4 rounded shadow">
+                        <div class="flex mb-4">
+                            <div class="w-1/2 bg-gray-300 text-center py-1 cursor-pointer" id="resultsTab">Results</div>
+                            <div class="w-1/2 bg-gray-200 text-center py-1 cursor-pointer" id="settingsTab">Settings
+                            </div>
+                        </div>
+                        <div hx-post="/sunlightmeter/results" hx-target="#resultsContent" hx-trigger="load, every 60s">
+                            <div id="resultsContent"></div>
+                        </div>
+                        <div id="settingsContent" class="hidden">
+                            <div class="grid grid-cols-1 gap-2">
+                                <label for="start"
+                                    class="block text-sm font-medium text-gray-700 text-left mb-[-0.5]">Start
+                                    Time</label>
+                                <input type="datetime-local" id="start" name="start"
+                                    class="shadow appearance-none border rounded py-0.5 text-sm w-full text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                <label for="end" class="block text-sm font-medium text-gray-700 text-left mb-[-0.5]">End
+                                    Time</label>
+                                <input type="datetime-local" id="end" name="end"
+                                    class="shadow appearance-none border rounded py-0.5 text-sm w-full text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                <input type="submit" style="visibility: hidden;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <div id="controlsContent" hx-get="/sunlightmeter/controls" hx-trigger="load"></div>
+            <div id="responseContent" class="bg-gray-900 rounded shadow-md text-center text-white"></div>
+        </div>
+    </div>
+</body>
+
+<script>
+    // select the correct tab, and hide the other tab
+    function switchTab(activeTabId, inactiveTabId, activeContentId, inactiveContentId) {
+        document.getElementById(inactiveContentId).classList.add('hidden');
+        document.getElementById(inactiveTabId).classList.remove('bg-gray-300');
+        document.getElementById(inactiveTabId).classList.add('bg-gray-200');
+
+        document.getElementById(activeContentId).classList.remove('hidden');
+        document.getElementById(activeTabId).classList.remove('bg-gray-200');
+        document.getElementById(activeTabId).classList.add('bg-gray-300');
+    }
+
+    window.onload = function () {
+        document.title = "Sunlight Meter";
+        document.getElementById('resultsTab').addEventListener('click', function () {
+            switchTab('resultsTab', 'settingsTab', 'resultsContent', 'settingsContent');
+        });
+        document.getElementById('settingsTab').addEventListener('click', function () {
+            switchTab('settingsTab', 'resultsTab', 'settingsContent', 'resultsContent');
+        });
+        setDateInputs();
+    }
+
+    function setDateInputs() {
+        // set the start and end times to 8 hours ago and now
+        var now = new Date();
+        var eightHoursAgo = new Date(now.getTime() - 8 * 60 * 60 * 1000);
+        document.getElementById('start').value = formatDateTime(eightHoursAgo);
+        document.getElementById('end').value = formatDateTime(now);
+    }
+
+    // format a date as a string that can be used in an input[type=datetime-local]
+    function formatDateTime(date) {
+        var year = date.getFullYear();
+        var month = (date.getMonth() + 1).toString().padStart(2, '0');
+        var day = date.getDate().toString().padStart(2, '0');
+        var hours = date.getHours().toString().padStart(2, '0');
+        var minutes = date.getMinutes().toString().padStart(2, '0');
+        return year + '-' + month + '-' + day + 'T' + hours + ':' + minutes;
+    }
+</script>
+
+</html>

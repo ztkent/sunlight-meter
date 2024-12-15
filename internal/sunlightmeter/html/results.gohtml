@@ -1,0 +1,16 @@
+<div class="grid grid-cols-1 gap-8">
+    <div>
+        <h2 class="underline mb-1"> Current Conditions </h2>
+        <div class="text-sm font-medium text-gray-700">Current Lux: {{.Lux}}</div>
+        <div class="text-sm font-medium text-gray-700">Current Infrared: {{.Infrared}}</div>
+        <div class="text-sm font-medium text-gray-700">Current Visible: {{.Visible}}</div>
+        <div class="text-sm font-medium text-gray-700">Current Full Spectrum: {{.FullSpectrum}}</div>
+    </div>
+    <div>
+        <h2 class="underline"> Range Average </h2>
+        <div class="text-sm font-small text-gray-500 mb-1">Range: {{.DateRange}}</div>
+        <div class="text-sm font-medium text-gray-700">Time in Range: {{.RecordedHoursInRange}} Hrs</div>
+        <div class="text-sm font-medium text-gray-700">Full Sunlight: {{.FullSunlightInRange}} Hrs</div>
+        <div class="text-sm font-medium text-gray-700">Light Conditions: {{.LightConditionInRange}}</div>
+    </div>
+</div>

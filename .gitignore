@@ -1,0 +1,12 @@
+.env
+slm
+sunlight-meter
+sunlightmeter.db
+sunlightmeter.code-workspace
+.vscode/launch.json
+*.json
+*.creds
+go1.21.11.linux-arm64.tar.gz
+cert.pem
+key.pem
+slm.log

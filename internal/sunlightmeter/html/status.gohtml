@@ -1,0 +1,19 @@
+{{ if .Connected }}
+<div class="text-white text-sm rounded-full px-2 bg-green-500 ml-4 mb-1">
+    Connected
+</div>
+{{ else }}
+<div class="text-white text-sm rounded-full px-2 bg-red-500 ml-4 mb-1">
+    Disconnected
+</div>
+{{ end }}
+
+{{ if .Enabled}}
+<div class="text-white text-sm rounded-full px-2 bg-green-500 ml-4 mb-2">
+    Enabled
+</div>
+{{ else }}
+<div class="text-white text-sm rounded-full px-2 bg-red-500 ml-4 mb-2">
+    Disabled
+</div>
+{{ end }}

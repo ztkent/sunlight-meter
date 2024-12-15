@@ -1,0 +1,17 @@
+<div class="flex justify-center bg-gray-900 mt-4 rounded shadow-md space-x-2">
+    <button hx-get="/sunlightmeter/start" hx-target="#responseContent" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 text-xs rounded w-24">
+        Start
+    </button>
+    <button hx-get="/sunlightmeter/stop" hx-target="#responseContent" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 text-xs rounded w-24">
+        Stop
+    </button>
+    <a href="/sunlightmeter/export" download class="inline-block bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 text-xs rounded w-24">
+        Download Results
+    </a>
+    <button hx-get="/sunlightmeter/current-conditions" hx-target="#responseContent" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 text-xs rounded w-24">
+        Current Conditions
+    </button>
+    <button hx-get="/sunlightmeter/signal-strength" hx-target="#responseContent" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 text-xs rounded w-24">
+        Wifi Connection
+    </button>
+</div>
