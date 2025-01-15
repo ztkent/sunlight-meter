@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ztkent/sunlight-meter/internal/tools"
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/components"
 	"github.com/go-echarts/go-echarts/v2/opts"
@@ -35,7 +34,7 @@ func (m *SLMeter) ServeDashboard() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-        w.Write(fileContent)
+		w.Write(fileContent)
 	}
 }
 
@@ -72,7 +71,6 @@ func (m *SLMeter) ServeSensorStatus() http.HandlerFunc {
 			return
 		}
 
-		// Setup the status response
 		type Status struct {
 			Connected bool
 			Enabled   bool
@@ -96,10 +94,7 @@ func (m *SLMeter) ServeSensorStatus() http.HandlerFunc {
 // Serve the results graph
 func (m *SLMeter) ServeResultsGraph() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Get the date range for the graph from the request
-		startDate, endDate := tools.ParseStartAndEndDate(r)
-
-		// Query the database for the lux and created_at values
+		startDate, endDate := parseStartAndEndDate(r)
 		rows, err := m.ResultsDB.Query("SELECT lux, created_at FROM sunlight WHERE created_at BETWEEN ? AND ? ORDER BY created_at", startDate, endDate)
 		if err != nil {
 			log.Println(err)
@@ -108,7 +103,6 @@ func (m *SLMeter) ServeResultsGraph() http.HandlerFunc {
 		}
 		defer rows.Close()
 
-		// Prepare the data for the chart
 		var luxValues []opts.LineData
 		var timeValues []string
 		var maxLux int
@@ -121,28 +115,22 @@ func (m *SLMeter) ServeResultsGraph() http.HandlerFunc {
 				return
 			}
 
-			// Convert lux to float64
 			luxFloat, err := strconv.ParseFloat(lux, 64)
 			if err != nil {
 				log.Println(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-
-			// Format the timestamp
 			timeString := createdAt.Format("2006-01-02 15:04:05")
 			if luxFloat > float64(maxLux) {
-				// Round up to the nearest 5000
 				maxLux = int(math.Ceil(luxFloat/5000) * 5000)
 			}
+
 			luxValues = append(luxValues, opts.LineData{Value: luxFloat})
 			timeValues = append(timeValues, timeString)
 		}
 
-		// Create a new line chart
 		line := charts.NewLine()
-
-		// Add series for each level
 		levels := map[int]string{
 			500:   "DarkGrey",
 			1000:  "WhiteSmoke",
@@ -188,7 +176,6 @@ func (m *SLMeter) ServeResultsGraph() http.HandlerFunc {
 				Max:  fmt.Sprintf("%d", maxLux),
 			}),
 			charts.WithTooltipOpts(opts.Tooltip{
-				// Enable hover with a custom tooltip display
 				Show:      true,
 				Trigger:   "axis",
 				TriggerOn: "mousemove",
@@ -210,10 +197,9 @@ func (m *SLMeter) ServeResultsGraph() http.HandlerFunc {
 		// Create a new page and add the line chart to it
 		page := components.NewPage()
 		page.AddCharts(line)
-
-		// Render the graphs
 		w.Header().Set("Content-Type", "text/html")
 		page.Render(w)
+
 		// Trigger an update for the results tab
 		w.Write([]byte(`<div id='resultUpdateTrigger' hx-post='/sunlightmeter/results' hx-target='#resultsContent' hx-trigger='load'></div>`))
 		w.Write([]byte(`<script>document.title = "Sunlight Meter";</script>`))
@@ -228,7 +214,7 @@ func (m *SLMeter) ServeResultsTab() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		startDate, endDate := tools.ParseStartAndEndDate(r)
+		startDate, endDate := parseStartAndEndDate(r)
 		conditions, err = m.getHistoricalConditions(conditions, startDate, endDate)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -280,10 +266,8 @@ func (m *SLMeter) getHistoricalConditions(conditions Conditions, startDate strin
 	if m.ResultsDB == nil {
 		return conditions, nil
 	}
-	// Set the date range
-	conditions.DateRange = fmt.Sprintf("%s - %s UTC", startDate, endDate)
 
-	// Get the average lux for the date range
+	conditions.DateRange = fmt.Sprintf("%s - %s UTC", startDate, endDate)
 	row := m.ResultsDB.QueryRow(`
     SELECT 
         COALESCE(AVG(lux), 0), 
@@ -329,7 +313,7 @@ func (m *SLMeter) getHistoricalConditions(conditions Conditions, startDate strin
 
 	// Determine the light condition for the date range
 	if oldest.Valid && mostRecent.Valid {
-		mostRecent, oldest, err := tools.StartAndEndDateToTime(oldest.String, mostRecent.String)
+		mostRecent, oldest, err := startAndEndDateToTime(oldest.String, mostRecent.String)
 		if err != nil {
 			return conditions, err
 		}
@@ -352,4 +336,53 @@ func (m *SLMeter) getHistoricalConditions(conditions Conditions, startDate strin
 func (m *SLMeter) Clear() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 	}
+}
+
+// Get the start and end dates from the request, format them for comparison with the DB
+func parseStartAndEndDate(r *http.Request) (string, string) {
+	r.ParseForm()
+	startDate := r.FormValue("start")
+	endDate := r.FormValue("end")
+	layoutInput := "2006-01-02T15:04"
+	layoutDB := "2006-01-02 15:04:05"
+	if startDate == "" || endDate == "" {
+		startDate = time.Now().UTC().Add(-8 * time.Hour).Format(layoutDB)
+		endDate = time.Now().UTC().Format(layoutDB)
+	} else {
+		var err error
+		var t time.Time
+
+		// Assume they are in EST, who has users? Not me.
+		loc, _ := time.LoadLocation("America/Indiana/Indianapolis")
+
+		t, err = time.Parse(layoutInput, startDate)
+		if err != nil {
+			log.Println("Error parsing start date:", err)
+		} else {
+			t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), loc)
+			startDate = t.UTC().Format(layoutDB)
+		}
+
+		t, err = time.Parse(layoutInput, endDate)
+		if err != nil {
+			log.Println("Error parsing end date:", err)
+		} else {
+			t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), loc)
+			endDate = t.UTC().Format(layoutDB)
+		}
+	}
+	return startDate, endDate
+}
+
+func startAndEndDateToTime(startDate string, endDate string) (time.Time, time.Time, error) {
+	layoutDB := "2006-01-02 15:04:05"
+	start, err := time.Parse(layoutDB, startDate)
+	if err != nil {
+		return time.Time{}, time.Time{}, err
+	}
+	end, err := time.Parse(layoutDB, endDate)
+	if err != nil {
+		return time.Time{}, time.Time{}, err
+	}
+	return start, end, nil
 }
