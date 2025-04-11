@@ -12,6 +12,8 @@ Features:
 - Provides a dashboard to control the sensor and visualize data.
 - Determines if your location is: ☁️ shade, partial shade, partial sun, or full sun ☀️
 
+![image](https://github.com/user-attachments/assets/9362e739-7c82-4d07-988c-599c2ab5953b)
+
 ## How it works
 ### Configuration: 
 The TSL2591 sensor is connected to a Raspberry Pi via i2c.  
